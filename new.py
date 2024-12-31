@@ -2,73 +2,102 @@ import streamlit as st
 import time
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
+from datetime import datetime
 
-# Function to create a GIF animation for Happy New Year
-def create_happy_new_year_gif(output_file, frame_count=30, width=500, height=300):
+def create_festive_animation(output_file, frame_count=40, width=600, height=400):
     frames = []
-    font = ImageFont.truetype("arial.ttf", 40)
+    current_year = datetime.now().year
 
     for i in range(frame_count):
         img = Image.new("RGB", (width, height), "black")
         draw = ImageDraw.Draw(img)
 
-        # Background animation with gradient
-        gradient = np.linspace(0, 255, width).astype(np.uint8)
-        gradient = np.tile(gradient, (height, 1))
-        for y in range(height):
-            color = (gradient[y][0], 0, gradient[y][0])
-            draw.line([(0, y), (width, y)], fill=color, width=1)
+        # Animated starry background
+        for _ in range(100):
+            star_x = np.random.randint(0, width)
+            star_y = np.random.randint(0, height)
+            brightness = int(255 * abs(np.sin(2 * np.pi * (i / frame_count + np.random.rand()))))
+            draw.point((star_x, star_y), fill=(brightness, brightness, brightness))
 
-        # Animation effect: Pulsating text
-        scale = 1.5 + 0.5 * np.sin(2 * np.pi * i / frame_count)
-        font_size = int(40 * scale)
-        dynamic_font = ImageFont.truetype("arial.ttf", font_size)
+        # Dynamic text effects
+        scale = 1.3 + 0.3 * np.sin(2 * np.pi * i / frame_count)
+        main_font_size = int(50 * scale)
+        main_font = ImageFont.truetype("arial.ttf", main_font_size)
+        sub_font = ImageFont.truetype("arial.ttf", 30)
 
-        text_color = (255, 255, int(255 * abs(np.sin(2 * np.pi * i / frame_count))))
-        text = "Happy New Year!"
-        text_bbox = draw.textbbox((0, 0), text, font=dynamic_font)
-        text_width, text_height = text_bbox[2] - text_bbox[0], text_bbox[3] - text_bbox[1]
-        text_position = ((width - text_width) // 2, (height - text_height) // 2)
+        # Main greeting with color animation
+        main_text = f"Happy New Year {current_year}!"
+        color_r = int(255 * abs(np.sin(2 * np.pi * i / frame_count)))
+        color_g = int(255 * abs(np.sin(2 * np.pi * (i / frame_count + 0.33))))
+        color_b = int(255 * abs(np.sin(2 * np.pi * (i / frame_count + 0.66))))
+        
+        # Center the main text
+        main_bbox = draw.textbbox((0, 0), main_text, font=main_font)
+        main_width = main_bbox[2] - main_bbox[0]
+        main_x = (width - main_width) // 2
+        draw.text((main_x, 100), main_text, fill=(color_r, color_g, color_b), font=main_font)
 
-        draw.text(text_position, text, fill=text_color, font=dynamic_font)
+        # Personal message with fade effect
+        wishes = [
+            "Best Wishes, You!",
+            "May all your dreams come true",
+            "Success and happiness ahead"
+        ]
+        
+        for idx, wish in enumerate(wishes):
+            opacity = int(255 * abs(np.sin(2 * np.pi * (i / frame_count + idx * 0.2))))
+            wish_bbox = draw.textbbox((0, 0), wish, font=sub_font)
+            wish_width = wish_bbox[2] - wish_bbox[0]
+            wish_x = (width - wish_width) // 2
+            draw.text((wish_x, 200 + idx * 50), wish, fill=(255, 255, opacity), font=sub_font)
 
-        # Add sparkle effect
-        for _ in range(20):
-            sparkle_x = np.random.randint(0, width)
-            sparkle_y = np.random.randint(0, height)
-            sparkle_color = (255, 255, 255) if np.random.rand() > 0.5 else (255, 215, 0)
-            draw.ellipse([(sparkle_x, sparkle_y), (sparkle_x + 2, sparkle_y + 2)], fill=sparkle_color)
+        # Firework effects
+        for _ in range(5):
+            center_x = np.random.randint(0, width)
+            center_y = np.random.randint(0, height)
+            for angle in range(0, 360, 30):
+                length = 20 * np.random.rand()
+                end_x = center_x + length * np.cos(np.radians(angle))
+                end_y = center_y + length * np.sin(np.radians(angle))
+                draw.line([(center_x, center_y), (end_x, end_y)], 
+                         fill=(255, 215, 0), width=2)
 
         frames.append(img)
 
-    frames[0].save(
-        output_file,
-        save_all=True,
-        append_images=frames[1:],
-        optimize=False,
-        duration=100,
-        loop=0,
-    )
+    frames[0].save(output_file, save_all=True, append_images=frames[1:],
+                  optimize=False, duration=80, loop=0)
 
-# Create the Happy New Year animation
-output_file = "happy_new_year.gif"
-create_happy_new_year_gif(output_file)
-
-# Streamlit app
-st.title("Happy New Year Animation 🎉")
-st.markdown(
-    """<style>
+# Streamlit app with enhanced styling
+st.markdown("""
+    <style>
     .stApp {
-        background-color: #1a1a1a;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a192f 100%);
         color: white;
     }
-    </style>""",
-    unsafe_allow_html=True,
-)
-st.write("Greeting for the New Year!")
+    h1 {
+        text-align: center;
+        background: linear-gradient(45deg, #FFD700, #FFA500);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        padding: 20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-# Display GIF animation
-if output_file:
-    st.image(output_file, caption="Happy New Year! 🎉")
+st.title("✨ Magical New Year Wishes ✨")
 
-st.write("Wishing you a fantastic year ahead! ✨")
+# Create and display animation
+output_file = "festive_new_year.gif"
+create_festive_animation(output_file)
+st.image(output_file, use_container_width=True)
+
+# Additional festive messages
+st.markdown("""
+    <div style='text-align: center; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;'>
+        <h2 style='color: #FFD700;'>Dear You</h2>
+        <p style='color: #E0E0E0; font-size: 18px;'>
+            May the coming year bring you endless opportunities and beautiful moments.
+            Wishing you 365 days of success, happiness, and prosperity!
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
